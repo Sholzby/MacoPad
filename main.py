@@ -1,9 +1,8 @@
-from windows_tools.installed_software import get_installed_software
 from psutil import process_iter
 from keyboard import is_pressed
 from time import sleep
-from pywinauto.application import Application, WindowSpecification
-from pywinauto.keyboard import send_keys
+from subprocess import Popen
+import pyautogui
 
 word_running = False
 
@@ -16,23 +15,25 @@ def launch_pastel_hilite_server():
     print("start server")
 
 
-def send_keys_ai(app):
+def send_keys_ai(keys):
     print("temp")
 
 
 def start_ai_chat():
-    process_id = program_is_running("copilot")
-    if process_id is None:
-        cmd_prompt = Application().start("cmd.exe")
-        cmd_prompt.CommandPrompt.type_keys(
-            'Start-Process "shell:AppsFolder\Microsoft.Copilot_8wekyb3d8bbwe!App"{ENTER}'
-        )
-        sleep(1)
-        cmd_prompt.kill(soft=True)
-
-    else:
-        app = Application.connect(process_id)
-        return app
+    Popen("start powershell", shell=True)
+    sleep(1)
+    # brings back chat dialog if minimized/closed
+    pyautogui.write(
+        'Start-Process "shell:AppsFolder\Microsoft.Copilot_8wekyb3d8bbwe!App"'
+    )
+    pyautogui.press("enter")
+    sleep(1)
+    pyautogui.hotkey("alt", "tab")
+    sleep(1)
+    pyautogui.write("exit")
+    pyautogui.press("enter")
+    sleep(1)
+    copilot_input_loc = pyautogui.locateAllOnScreen("/locators/coilot_txtbx.png")
 
 
 def check_macro_server():
@@ -46,18 +47,17 @@ def check_macro_server():
 
 
 def program_is_running(process_name):
-    process_id = None
-    for process in process_iter(["name", "pid"]):
+    for process in process_iter(["name"]):
         if process.info["name"] and process.info["name"].lower() == process_name:
-            return process.info["pid"]
-    return process_id
+            return True
+    return False
 
 
 def main_loop():
     while True:
-        check_macro_server()
+        # check_macro_server()
         if is_pressed("ctrl+1"):
-            print("do macro")
+            start_ai_chat()
         elif is_pressed("ctrl+2"):
             print("do macro")
         elif is_pressed("ctrl+3"):
@@ -91,21 +91,7 @@ def main_loop():
         sleep(0.1)
 
 
-def check_installs():
-    has_ai = False
-    has_ms_word = False
-    for software in get_installed_software():
-        match software["name"]:
-            case "Copilot":
-                has_ai = True
-            case "msWord":
-                has_ms_word = True
-    if has_ai and has_ms_word:
-        return True
-    else:
-        return False
-
-
 if __name__ == "__main__":
-    if check_installs():
-        main_loop()
+    # main_loop()
+    # type_stuff = "test"
+    start_ai_chat()
