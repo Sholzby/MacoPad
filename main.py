@@ -2,9 +2,12 @@ from psutil import process_iter
 from keyboard import is_pressed
 from time import sleep
 from subprocess import Popen
-import pyautogui
+from pyautogui import click, write, press, locateCenterOnScreen
 
 word_running = False
+copilot_id = "locators\copilot_txtbx.png"
+power_shell_id = "locators\power_shell.png"
+copilot_1 = "temp"
 
 
 def shutdown_pastel_hilite_server():
@@ -15,25 +18,22 @@ def launch_pastel_hilite_server():
     print("start server")
 
 
-def send_keys_ai(keys):
-    print("temp")
-
-
-def start_ai_chat():
+def ask_copilot(keys):
     Popen("start powershell", shell=True)
     sleep(1)
     # brings back chat dialog if minimized/closed
-    pyautogui.write(
-        'Start-Process "shell:AppsFolder\Microsoft.Copilot_8wekyb3d8bbwe!App"'
-    )
-    pyautogui.press("enter")
+    # works even if process is already running
+    write('Start-Process "shell:AppsFolder\Microsoft.Copilot_8wekyb3d8bbwe!App"')
+    press("enter")
     sleep(1)
-    pyautogui.hotkey("alt", "tab")
-    sleep(1)
-    pyautogui.write("exit")
-    pyautogui.press("enter")
-    sleep(1)
-    copilot_input_loc = pyautogui.locateAllOnScreen("/locators/coilot_txtbx.png")
+    x, y = locateCenterOnScreen(image=power_shell_id, grayscale=False)
+    click(x, y)
+    write("exit")
+    press("enter")
+    x, y = locateCenterOnScreen(image=copilot_id, grayscale=False)
+    click(x, y)
+    write(keys)
+    press("enter")
 
 
 def check_macro_server():
@@ -57,7 +57,7 @@ def main_loop():
     while True:
         # check_macro_server()
         if is_pressed("ctrl+1"):
-            start_ai_chat()
+            start_ai_chat(copilot_1)
         elif is_pressed("ctrl+2"):
             print("do macro")
         elif is_pressed("ctrl+3"):
@@ -93,5 +93,5 @@ def main_loop():
 
 if __name__ == "__main__":
     # main_loop()
-    # type_stuff = "test"
-    start_ai_chat()
+    type_stuff = "how do I make ice cream?"
+    ask_copilot(type_stuff)
