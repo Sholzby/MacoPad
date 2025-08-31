@@ -2,7 +2,8 @@ from psutil import process_iter
 from keyboard import is_pressed
 from time import sleep
 from subprocess import Popen
-from pyautogui import click, write, press, locateCenterOnScreen
+from pyautogui import write, press, click, locateCenterOnScreen, ImageNotFoundException
+from pymsgbox import alert
 
 word_running = False
 copilot_id = "locators\copilot_txtbx.png"
@@ -18,7 +19,7 @@ def launch_pastel_hilite_server():
     print("start server")
 
 
-def ask_copilot(keys):
+def ask_copilot(keys) -> None:
     Popen("start powershell", shell=True)
     sleep(1)
     # brings back chat dialog if minimized/closed
@@ -26,17 +27,29 @@ def ask_copilot(keys):
     write('Start-Process "shell:AppsFolder\Microsoft.Copilot_8wekyb3d8bbwe!App"')
     press("enter")
     sleep(1)
-    x, y = locateCenterOnScreen(image=power_shell_id, grayscale=False)
-    click(x, y)
-    write("exit")
-    press("enter")
-    x, y = locateCenterOnScreen(image=copilot_id, grayscale=False)
-    click(x, y)
-    write(keys)
-    press("enter")
+    try:
+        location = locateCenterOnScreen(image=power_shell_id, grayscale=False)
+        if location is not None:
+            click(location.x, location.y)
+            write("exit")
+            press("enter")
+        location = locateCenterOnScreen(image=copilot_id, grayscale=False)
+        if location is not None:
+            click(location.x, location.y)
+            write(keys)
+            press("enter")
+        else:
+            raise ImageNotFoundException
+    except ImageNotFoundException:
+        alert(
+            text="Error starting copilot, contact your handsome boyfriend.",
+            title="Error",
+            button="Continue",
+        )
 
 
-def check_macro_server():
+def check_macro_server() -> None:
+    global word_running
     if program_is_running("winword.exe"):
         if not word_running:
             launch_pastel_hilite_server()
@@ -46,18 +59,18 @@ def check_macro_server():
         word_running = False
 
 
-def program_is_running(process_name):
+def program_is_running(process_name: str) -> bool:
     for process in process_iter(["name"]):
         if process.info["name"] and process.info["name"].lower() == process_name:
             return True
     return False
 
 
-def main_loop():
+def main_loop() -> None:
     while True:
         # check_macro_server()
         if is_pressed("ctrl+1"):
-            start_ai_chat(copilot_1)
+            ask_copilot("test")
         elif is_pressed("ctrl+2"):
             print("do macro")
         elif is_pressed("ctrl+3"):
@@ -88,7 +101,6 @@ def main_loop():
             print("do macro")
         elif is_pressed("ctrl+1+7"):
             print("do macro")
-        sleep(0.1)
 
 
 if __name__ == "__main__":
